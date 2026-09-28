@@ -4,53 +4,52 @@ from pydantic import BaseModel, Field
 app = FastAPI()
 
 
+class Editorial(BaseModel):
+    nombre: str
+    pais: str
+
+
 class Libro(BaseModel):
     titulo: str
     paginas: int = Field(gt=0)
     editorial: Editorial
     disponible: bool = True
 
-class Editorial(BaseModel):
-    nombre: str
-    pais: str
-    
-
 
 libros = [
     {
         "titulo": "El Principito",
-        "autor": "Antoine de Saint-Exupéry"
+        "paginas": 96,
+        "editorial": {
+            "nombre": "Salamandra",
+            "pais": "España"
+        }
     },
     {
         "titulo": "1984",
-        "autor": "George Orwell"
+        "paginas": 328,
+        "editorial": {
+            "nombre": "Debolsillo",
+            "pais": "España"
+        }
     },
     {
         "titulo": "Don Quijote de la Mancha",
-        "autor": "Miguel de Cervantes"
+        "paginas": 863,
+        "editorial": {
+            "nombre": "Alfaguara",
+            "pais": "España"
+        }
     }
 ]
+
 
 autores = [
-    {
-        "nombre": "Antoine de Saint-Exupéry"
-    },
-    {
-        "nombre": "George Orwell"
-    },
-    {
-        "nombre": "Miguel de Cervantes"
-    }
+    {"nombre": "Antoine de Saint-Exupéry"},
+    {"nombre": "George Orwell"},
+    {"nombre": "Miguel de Cervantes"}
 ]
 
-@app.get("/autores")
-def listar_autores():
-    return autores
-
-@app.post("/autores")
-def crear_autor(autor: dict):
-    autores.append(autor)
-    return autor
 
 @app.get("/")
 def inicio():
@@ -70,8 +69,8 @@ def listar_libros(paginas_min: int | None = None):
 
 @app.post("/libros")
 def crear_libro(libro: Libro):
-    libros.append(libro)
-    return libro 
+    libros.append(libro.model_dump())
+    return libro
 
 
 @app.get("/libros/{titulo}")
@@ -80,7 +79,10 @@ def buscar_libro(titulo: str):
         if libro["titulo"] == titulo:
             return libro
 
-    raise HTTPException(status_code=404, detail="Libro no encontrado")
+    raise HTTPException(
+        status_code=404,
+        detail="Libro no encontrado"
+    )
 
 
 @app.put("/libros/{titulo}")
@@ -90,7 +92,11 @@ def actualizar_libro(titulo: str, libro_nuevo: Libro):
             libros[i] = libro_nuevo.model_dump()
             return libros[i]
 
-    raise HTTPException(status_code=404, detail="Libro no encontrado")
+    raise HTTPException(
+        status_code=404,
+        detail="Libro no encontrado"
+    )
+
 
 @app.delete("/libros/{titulo}", status_code=204)
 def eliminar_libro(titulo: str):
@@ -99,5 +105,18 @@ def eliminar_libro(titulo: str):
             libros.pop(i)
             return
 
-    raise HTTPException(status_code=404, detail="Libro no encontrado")
+    raise HTTPException(
+        status_code=404,
+        detail="Libro no encontrado"
+    )
 
+
+@app.get("/autores")
+def listar_autores():
+    return autores
+
+
+@app.post("/autores")
+def crear_autor(autor: dict):
+    autores.append(autor)
+    return autor

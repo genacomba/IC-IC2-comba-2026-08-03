@@ -1,6 +1,9 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
+import os
+import psycopg
+
 app = FastAPI()
 
 
@@ -50,7 +53,13 @@ autores = [
     {"nombre": "Miguel de Cervantes"}
 ]
 
-
+def obtener_conexion():
+    return psycopg.connect(
+        host=os.environ["DB_HOST"],
+        user=os.environ["DB_USER"],
+        password=os.environ["DB_PASSWORD"],
+        dbname=os.environ["DB_NAME"],
+    )
 @app.get("/")
 def inicio():
     return {"mensaje": "hola"}
@@ -58,19 +67,81 @@ def inicio():
 
 @app.get("/libros")
 def listar_libros(paginas_min: int | None = None):
-    if paginas_min is None:
-        return libros
+    conexion = obtener_conexion()
 
-    return [
-        libro for libro in libros
-        if libro["paginas"] >= paginas_min
-    ]
+    try:
+        with conexion.cursor() as cursor:
+            if paginas_min is None:
+                cursor.execute("""
+                    SELECT id, titulo, paginas,
+                           editorial_nombre, editorial_pais, disponible
+                    FROM libros
+                """)
+            else:
+                cursor.execute("""
+                    SELECT id, titulo, paginas,
+                           editorial_nombre, editorial_pais, disponible
+                    FROM libros
+                    WHERE paginas >= %s
+                """, (paginas_min,))
+
+            filas = cursor.fetchall()
+
+        libros_resultado = []
+
+        for fila in filas:
+            libros_resultado.append({
+                "id": fila[0],
+                "titulo": fila[1],
+                "paginas": fila[2],
+                "editorial": {
+                    "nombre": fila[3],
+                    "pais": fila[4]
+                },
+                "disponible": fila[5]
+            })
+
+        return libros_resultado
+
+    finally:
+        conexion.close()
 
 
 @app.post("/libros")
 def crear_libro(libro: Libro):
-    libros.append(libro.model_dump())
-    return libro
+    conexion = obtener_conexion()
+
+    try:
+        with conexion.cursor() as cursor:
+            cursor.execute("""
+                INSERT INTO libros (
+                    titulo,
+                    paginas,
+                    editorial_nombre,
+                    editorial_pais,
+                    disponible
+                )
+                VALUES (%s, %s, %s, %s, %s)
+                RETURNING id
+            """, (
+                libro.titulo,
+                libro.paginas,
+                libro.editorial.nombre,
+                libro.editorial.pais,
+                libro.disponible
+            ))
+
+            id_libro = cursor.fetchone()[0]
+
+        conexion.commit()
+
+        return {
+            "id": id_libro,
+            **libro.model_dump()
+        }
+
+    finally:
+        conexion.close()
 
 
 @app.get("/libros/{titulo}")
@@ -120,3 +191,29 @@ def listar_autores():
 def crear_autor(autor: dict):
     autores.append(autor)
     return autor
+
+@app.get("/salud")
+def salud():
+    host = os.environ["DB_HOST"]
+    user = os.environ["DB_USER"]
+    password = os.environ["DB_PASSWORD"]
+    dbname = os.environ["DB_NAME"]
+
+    try:
+        with psycopg.connect(
+            host=host,
+            user=user,
+            password=password,
+            dbname=dbname,
+        ):
+            return {
+                "estado": "ok",
+                "mensaje": "Conexión a PostgreSQL exitosa"
+            }
+
+    except Exception as e:
+        return {
+            "estado": "error",
+            "mensaje": "No se pudo conectar a PostgreSQL",
+            "motivo": str(e)
+        }

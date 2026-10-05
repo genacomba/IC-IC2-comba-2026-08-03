@@ -1,0 +1,6 @@
+🔴 B5 — La caché de capas
+Buildeá dos veces seguidas sin cambiar nada y mirá cuánto tarda la segunda. Después cambiá una línea del script y buildeá de nuevo: ¿se volvió a ejecutar el pip install? Reordená el Dockerfile para que un cambio en el código no repita la instalación de dependencias. Listo cuando: un cambio en el script ya no dispara el pip install, y podés explicar qué orden de COPY lo logra y por qué.
+
+
+
+Docker guarda en caché las capas del build. Si requirements.txt no cambia, la capa de pip install puede reutilizarse. Por eso se copia primero requirements.txt, se instalan las dependencias y recién después se copia el código

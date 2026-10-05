@@ -1,0 +1,6 @@
+🟡 B3 — Rompelo a propósito
+
+Sacá la línea que instala las dependencias y volvé a buildear/correr. Mirá el error. Después arreglalo. Listo cuando: entendés qué falló y por qué (la librería no estaba en la imagen, aunque en tu máquina sí), y en qué momento falló: ¿en el build o al correr?
+
+
+Al sacar la instalación de requests, el docker build terminó correctamente porque solo estaba construyendo la imagen. El error apareció al ejecutar el contenedor, porque Python intentó importar requests y la librería no estaba instalada dentro de la imagen

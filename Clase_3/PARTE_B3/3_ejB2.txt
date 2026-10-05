@@ -1,0 +1,5 @@
+🟡 B2 — Con dependencias
+Hacé un script que use una librería externa (ej. requests). Agregá un requirements.txt y la instalación en el Dockerfile. Listo cuando: el contenedor corre el script con la librería instalada adentro (no en tu máquina), y podés explicar por qué adentro de la imagen no hace falta un venv.
+
+
+El venv sirve para aislar dependencias de Python dentro de una misma máquina, mientras que Docker aísla todo el entorno de ejecución del programa, por lo que dentro de este contenedor no necesitamos otro venv.

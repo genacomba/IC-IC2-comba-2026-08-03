@@ -1,0 +1,8 @@
+🟡 A5 — Explicalo
+
+En 3 frases, con tus palabras: ¿qué diferencia hay entre una imagen y un contenedor? ¿Por qué Docker resuelve el "en mi máquina anda y en la tuya no", y qué resuelve que el venv no resolvía? Listo cuando: lo explicás sin usar la palabra "magia", y nombrás al menos una cosa que el venv no aislaba.
+
+
+
+
+Una imagen es como un molde que contiene todo lo necesario para crear un entorno, mientras que un contenedor es una instancia de esa imagen que está ejecutándose. Docker permite ejecutar la aplicación con el mismo entorno y dependencias, independientemente de la computadora. El `venv` aislaba las dependencias de Python, pero no aislaba otras cosas como el sistema operativo, las librerías del sistema o la configuración del entorno.
